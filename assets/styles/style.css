@@ -164,7 +164,7 @@ input:checked + .slider::before {
   position: fixed;
   bottom: 0;
   right: 0;
-  height: 70px;
+  height: 90px;
   font-family: sans-serif;
   z-index: 2;
   width: calc(100% - 250px);
@@ -176,6 +176,10 @@ input:checked + .slider::before {
 }
 
 /* util styles  */
+.hidden {
+  display: none !important;
+}
+
 .wd-1 {
   min-width: 80px;
 }

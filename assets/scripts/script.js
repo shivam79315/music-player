@@ -3,19 +3,48 @@ class MusicPlayer {
         this.header = document.querySelector('.header');
         this.songsList = document.querySelector('.list-body');
         this.searchInput = document.querySelector('#searchSong');
+
+        const rootStyles = getComputedStyle(document.documentElement);
+
+        this.themes = {
+            dark: {
+                '--dark': rootStyles.getPropertyValue('--light').trim(), 
+                '--light': rootStyles.getPropertyValue('--dark').trim()
+            },
+            light: {
+                '--dark': rootStyles.getPropertyValue('--dark').trim(),
+                '--light': rootStyles.getPropertyValue('--light').trim()
+            }
+        };
+
+        this.setupInitial();
         this.setupEventListeners();
-        this.setupSongsList(songs);
     }
 
     setupEventListeners() {
-       document.addEventListener('click', (e) => {
-            if (e.target.closest('.toggle-switch')) {
-                this.updateTheme();
+        const playPauseBtn = document.querySelector('.playPauseBtn');
+        const playBtn = playPauseBtn.querySelector('.song-play-btn');
+        const pauseBtn = playPauseBtn.querySelector('.song-pause-btn');
+
+        document.addEventListener('click', (e) => {
+            const checkbox = e.target.closest('.checkbox');
+            if (checkbox) {
+                const mode = checkbox.checked ? 'dark' : 'light';
+                this.updateTheme(mode);
             }
-            const songRow = e.target.closest('.song-row');
-            if (songRow) {
-            const song = JSON.parse(songRow.dataset.item);
-            this.updateSongCard(song);
+            if (e.target.closest('.song-row')) {
+                const song = JSON.parse(e.target.closest('.song-row').dataset.item);
+                this.updateSongCard(song);
+            }
+            if (e.target.closest('.playPauseBtn')) {
+                playBtn.classList.toggle('hidden');
+                pauseBtn.classList.toggle('hidden');
+            }
+            if(e.target.closest('.song-play-btn')) {
+                this._playSong();
+            }
+            if(e.target.closest('.song-pause-btn')) {
+                this._pauseSong();
             }
         });
 
@@ -26,16 +55,17 @@ class MusicPlayer {
         });
     }
 
-    updateTheme() {
-        const isDark = document.querySelector('.checkbox')?.checked;
+    // to apply light dark mode in player 
+    updateTheme(mode) {
+        const selectedTheme = this.themes[mode];
         const root = document.documentElement;
 
-        if (isDark) {
-            root.style.setProperty('--dark', '#ECFAE5');   
-            root.style.setProperty('--light', '#181C14');
+        if (selectedTheme) {
+            for (let key in selectedTheme) {
+                root.style.setProperty(key, selectedTheme[key]);
+            }
         } else {
-            root.style.setProperty('--dark', '#181C14');
-            root.style.setProperty('--light', '#ECFAE5');
+            console.warn(`Theme "${mode}" not found.`);
         }
     }
 
@@ -44,8 +74,11 @@ class MusicPlayer {
             const songHTML = this._createSongRowHTML(item, i);
             this.songsList.insertAdjacentHTML('beforeend', songHTML);
         })
+
+        this.createSongCard(songs[0]);
     }
 
+    // fn to search and filter songs as per song search 
     filterSongs(searchInput) {
         const matchedSongs = songs.filter(item => item.title.toLowerCase().includes(searchInput.toLowerCase()));
         
@@ -55,12 +88,71 @@ class MusicPlayer {
         } 
     }
 
+    // create music card 
+    createSongCard(song) {
+        const musicCard = document.querySelector('.music-card');
+
+        musicCard.innerHTML = "";
+
+        musicCard.innerHTML = this._music_card_html(song);
+    }
+
+    // this fn updates currently playing song card 
     updateSongCard(song) {
-        const songTitle = document.querySelector('.song-info');
-        songTitle.innerHTML = `<p><strong>${song.title}</strong> — <small>${song.genre}</small></p>`;
+        const musicCard = document.querySelector('.music-card');
+
+        musicCard.innerHTML = "";
+
+        musicCard.innerHTML = this._music_card_html(song);
+
+        this._playSong();
     }
 
     // util. fn 
+    _playSong() {
+        const orgAud = document.querySelector('.audio-org');
+        const playBtn = document.querySelector('.song-play-btn');
+        const pauseBtn = document.querySelector('.song-pause-btn');
+        playBtn.classList.add('hidden');
+        pauseBtn.classList.remove('hidden');
+        orgAud.play();
+    }
+
+    _pauseSong() {
+        const orgAud = document.querySelector('.audio-org');
+        orgAud.pause();
+    }
+
+    _debounce(fn, delay) {
+        if(this._debounceTimer) clearTimeout(this._debounceTimer);
+        this._debounceTimer = setTimeout(fn, delay);
+    }
+
+    // dynamic html 
+    _music_card_html(song) {
+        return `
+        <div class="song-info">
+            <p><strong>${song.title}</strong> — <small>${song.genre}</small></p>
+            <audio class="audio-org hidden" controls>
+                <source src="${song.file}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <!-- Music Controls -->
+        <div class="music-controls d-flex justify-content-center align-items-center gap-2">
+            <i class="fas fa-random"></i>
+            <i class="fas fa-backward"></i>
+            <span class="playPauseBtn">
+                <i class="fas fa-play song-play-btn"></i>
+                <i class="fa-solid fa-pause song-pause-btn hidden"></i>
+            </span>
+            <i class="fas fa-forward"></i>
+            <i class="fas fa-redo"></i>
+        </div>
+        `;
+    }
+
     _createSongRowHTML(song, i) {
         const songStr = JSON.stringify(song).replace(/"/g, '&quot;');
         return `
@@ -78,9 +170,9 @@ class MusicPlayer {
         `;
     }
 
-    _debounce(fn, delay) {
-        if(this._debounceTimer) clearTimeout(this._debounceTimer);
-        this._debounceTimer = setTimeout(fn, delay);
+    // setup initial player
+    setupInitial() {
+        this.setupSongsList(songs);
     }
 
 }
