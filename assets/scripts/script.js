@@ -5,6 +5,7 @@ class MusicPlayer {
         this.searchInput = document.querySelector('#searchSong');
 
         const rootStyles = getComputedStyle(document.documentElement);
+        this.currentSong;
 
         this.themes = {
             dark: {
@@ -45,6 +46,12 @@ class MusicPlayer {
             }
             if(e.target.closest('.song-pause-btn')) {
                 this._pauseSong();
+            }
+            if(e.target.closest('.play-next')) {
+                this._playNextSong();
+            }
+            if(e.target.closest('.play-previous')) {
+                this._playPreviousSong();
             }
         });
 
@@ -95,6 +102,8 @@ class MusicPlayer {
         musicCard.innerHTML = "";
 
         musicCard.innerHTML = this._music_card_html(song);
+
+        this.currentSong = song;
     }
 
     // this fn updates currently playing song card 
@@ -106,6 +115,8 @@ class MusicPlayer {
         musicCard.innerHTML = this._music_card_html(song);
 
         this._playSong();
+
+        this.currentSong = song;
     }
 
     // util. fn 
@@ -120,8 +131,42 @@ class MusicPlayer {
 
     _pauseSong() {
         const orgAud = document.querySelector('.audio-org');
+        const playBtn = document.querySelector('.song-play-btn');
+        const pauseBtn = document.querySelector('.song-pause-btn');
+        playBtn.classList.remove('hidden');
+        pauseBtn.classList.add('hidden');
         orgAud.pause();
     }
+
+    _playNextSong() {
+        const currentIndex = songs.findIndex(song => song.id === this.currentSong.id);
+
+        // Check if it's the last song
+        if (currentIndex === songs.length - 1) {
+            alert("This is the last song.");
+            return; 
+        }
+
+        const nextSong = songs[currentIndex + 1];
+
+        this.updateSongCard(nextSong);
+        this._playSong(nextSong);
+    }
+
+    _playPreviousSong() {
+        const currentIndex = songs.findIndex(song => song.id === this.currentSong.id);
+
+        if(currentIndex === 0) {
+            alert("This is the last song.");
+            return;
+        }
+
+        const prevSong = songs[currentIndex - 1];
+
+        this.updateSongCard(prevSong);
+        this._playSong(prevSong);
+    }
+
 
     _debounce(fn, delay) {
         if(this._debounceTimer) clearTimeout(this._debounceTimer);
@@ -142,12 +187,12 @@ class MusicPlayer {
         <!-- Music Controls -->
         <div class="music-controls d-flex justify-content-center align-items-center gap-2">
             <i class="fas fa-random"></i>
-            <i class="fas fa-backward"></i>
+            <i class="fas fa-backward play-previous"></i>
             <span class="playPauseBtn">
                 <i class="fas fa-play song-play-btn"></i>
                 <i class="fa-solid fa-pause song-pause-btn hidden"></i>
             </span>
-            <i class="fas fa-forward"></i>
+            <i class="fas fa-forward play-next"></i>
             <i class="fas fa-redo"></i>
         </div>
         `;
