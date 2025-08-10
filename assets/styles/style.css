@@ -181,7 +181,7 @@ input:checked + .slider::before {
 }
 
 .wd-1 {
-  min-width: 80px;
+  min-width: 100px;
 }
 
 .wd-2 {
@@ -210,4 +210,8 @@ input:checked + .slider::before {
 
 .song-row:hover .play-btn {
   display: inline-block;
+}
+
+.pointer {
+  cursor: pointer;
 }

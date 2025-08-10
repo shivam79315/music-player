@@ -73,12 +73,14 @@ const songs = [
     id: 11,
     title: "Shankin All Night",
     file: "assets/songs/shankin-all-night.mp3",
+    image : "https://fastly.picsum.photos/id/22/4434/3729.jpg?hmac=fjZdkSMZJNFgsoDh8Qo5zdA_nSGUAWvKLyyqmEt2xs0",
     genre: "hip-hop",
   },
   {
     id: 12,
     title: "Street Legends",
     file: "assets/songs/street-legends.mp3",
+    image: "https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w",
     genre: "hip-hop",
   },
   {
