@@ -31,6 +31,7 @@ class MusicPlayer {
 
         document.addEventListener('click', (e) => {
             const checkbox = e.target.closest('.checkbox');
+            const playListContainer = e.target.closest('.play-list-container .list-group-item');
             if (checkbox) {
                 const mode = checkbox.checked ? 'dark' : 'light';
                 this.updateTheme(mode);
@@ -56,7 +57,13 @@ class MusicPlayer {
                 this._playPreviousSong();
             } else if(e.target.closest('.create-pl-btn')) {
                 this._handlePlayList();
-            }
+            } else if(e.target.closest('.delete-playlist')) {
+                this._deletePlayList(e.target);
+            } else if(playListContainer) {
+                this.filterSongsPlaylist(playListContainer);
+            } else if(e.target.closest('.refresh-songs')) {
+                this._refreshSongs();
+            } 
         });
 
         this.input.addEventListener("keydown", (e) => {
@@ -105,6 +112,21 @@ class MusicPlayer {
         })
 
         this.createSongCard(songs[0]);
+    }
+
+    // filter songs as per playlist
+    filterSongsPlaylist(targetEl) {
+        const targetIndex = Number(targetEl.dataset.index);
+
+        const playlists = JSON.parse(localStorage.getItem('playlists')) || [];
+
+        const playlist = playlists.find(pl => pl.index === targetIndex);
+        if (!playlist) return console.warn("Playlist not found");
+
+        if (!playlist.songs || playlist.songs.length === 0) return;
+
+        this.songsList.innerHTML = '';
+        this.setupSongsList(playlist.songs);
     }
 
     // fn to search and filter songs as per song search 
@@ -233,9 +255,6 @@ class MusicPlayer {
                 <i class="fas fa-redo"></i>
             </div>
         </div>
-        <div class="add-play-list flex-shrink-1">
-            <i class="fa-solid fa-plus"></i>
-        </div>
         `;
     }
 
@@ -258,9 +277,12 @@ class MusicPlayer {
     }
 
     _playListHTML = (list) => {
-        return `<li class="list-group-item d-flex justify-content-between align-items-center p-2">
-            ${list.name}
+        return `<li class="list-group-item d-flex justify-content-between align-items-center pointer p-2" data-index="${list.index}">
+            <span>${list.name}</span>
+            <div class="d-flex align-items-center gap-2">
             <span class="badge bg-primary rounded-pill">${list.songs.length}</span>
+            <i class="fa-solid fa-trash delete-playlist"></i>
+            </div>
         </li>`;
     }
 
@@ -309,6 +331,7 @@ class MusicPlayer {
         localStorage.setItem("playlists", JSON.stringify(playlists));
 
         alert(`Song added to ${playlists[playlistIndex].name}`);
+        this._refreshSongs();
     };
 
     _handlePlayList = () => {
@@ -356,13 +379,33 @@ class MusicPlayer {
             alert("Playlist already exists...");
             return;
         }
+        let index = JSON.parse(localStorage.getItem('playlists')).length || 0;
 
-        playlists.push({ name: listName, songs: [] });
+        playlists.push({ index, name: listName, songs: [] });
 
         localStorage.setItem(playlistsKey, JSON.stringify(playlists));
 
         alert("Playlist created successfully...");
+        this.showPlayLists();
+    }
 
+    _deletePlayList = (el) => {
+        const targetId = el.closest("[data-index]").dataset.index; // safer than chaining parentElement twice
+
+        let playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+
+        // Filter out the playlist with matching id
+        playlists = playlists.filter(item => item.index != targetId);
+
+        // Save the updated list back to localStorage
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        alert("Playlist deleted successfully");
+        this.showPlayLists();
+    }
+
+    _refreshSongs = () => {
+        this.setupSongsList(songs);
+        this.showPlayLists();
     }
 
     // setup initial player
